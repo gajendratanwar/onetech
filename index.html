@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VANI GRAPHICS — Packaging Calculator</title>
+<style>
+  :root{
+    --navy:#053659;
+    --accent:#0b74a6;
+    --muted:#6c7a86;
+    --bg:#f5f7fb;
+    --card:#ffffff;
+  }
+  html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;background:var(--bg);color:#222}
+  body{
+    background-image: url('background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+
+  header{
+    background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.9));
+    padding:18px 24px;
+    display:flex;
+    align-items:center;
+    gap:18px;
+    border-bottom:1px solid rgba(8,20,34,0.06);
+  }
+  header img.logo{height:64px;width:120px;object-fit:contain}
+  header .hdr-center{flex:1;text-align:center}
+  header h1{margin:0;font-size:40px;color:var(--navy);letter-spacing:0.2px}
+  header p{margin:4px 0 0;font-size:18px;color:var(--muted)}
+
+  main{max-width:1200px;margin:18px auto;padding:18px;display:grid;grid-template-columns:1fr 420px;gap:18px}
+
+  .card{background:var(--card);border-radius:10px;padding:16px;box-shadow:0 8px 22px rgba(12,24,40,0.06)}
+  .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  h2{margin:6px 0 12px;color:var(--navy);font-size:16px}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+  input[type=text], input[type=number], input[type=date], select{width:100%;padding:8px;border-radius:6px;border:1px solid #d6dbe3;font-size:14px;background:#fff}
+  .full{grid-column:1/-1}
+  .row{display:flex;gap:8px}
+  .small{font-size:13px;color:var(--muted)}
+  .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+  button{background:var(--navy);color:#fff;border:0;padding:10px 14px;border-radius:8px;cursor:pointer}
+  button.secondary{background:#fff;color:var(--navy);border:1px solid #d6dbe3}
+  button:active{transform:translateY(1px)}
+  .muted{color:var(--muted);font-size:13px}
+
+  .layers {display:flex;flex-direction:column;gap:8px}
+  .layer-row{display:grid;grid-template-columns:1fr 110px 110px;gap:8px;align-items:center}
+  .layer-row select, .layer-row input{height:40px;padding:6px}
+
+  .summary{white-space:pre-wrap;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, 'Courier New', monospace;background:#fbfdff;padding:12px;border-radius:8px;border:1px dashed #e6eff6;max-height:520px;overflow:auto}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  table th, table td{padding:8px;border-bottom:1px solid #f0f2f6;text-align:left}
+  table th{font-size:13px;color:var(--muted);background:#fcfdff}
+  .right-sticky{position:sticky;top:18px}
+
+  @media(max-width:980px){
+    main{grid-template-columns:1fr;padding:12px}
+    .form-grid{grid-template-columns:1fr}
+    .layer-row{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+<header>
+  <img src="logo.png" alt="VANI GRAPHICS" class="logo" />
+  <div class="hdr-center">
+    <h1>VANI GRAPHICS</h1>
+    <p>H-71, Okland Villa, California City, Indore - 452016 | Mobile: 7770975666, 9893399560 | vanigraphics.in</p>
+  </div>
+  <div style="width:120px;text-align:right" class="muted">Date: <span id="today"></span></div>
+</header>
+
+<main>
+  <!-- Left: input form -->
+  <div class="card">
+    <form id="calcForm">
+      <h2>Job Details</h2>
+      <div class="form-grid">
+        <div>
+          <label>Date</label>
+          <input type="date" id="date" />
+        </div>
+        <div>
+          <label>Client Name</label>
+          <input type="text" id="client" placeholder="Client / Company name" />
+        </div>
+
+        <div class="full">
+          <label>Job Title</label>
+          <input type="text" id="jobTitle" placeholder="Job / Design name" />
+        </div>
+
+        <h2 class="full">Options</h2>
+
+        <div>
+          <label>Units</label>
+          <select id="unit">
+            <option value="in">Inches</option>
+            <option value="cm">Centimeters</option>
+            <option value="mm">Millimeters</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Flute Factor (eg 1.4 = +40%)</label>
+          <input type="number" id="fluteFactor" value="1.4" step="0.01" />
+        </div>
+
+        <div>
+          <label>Job Length</label>
+          <input type="number" id="jobLength" value="18" step="0.01" />
+        </div>
+
+        <div>
+          <label>Job Width</label>
+          <input type="number" id="jobWidth" value="23" step="0.01" />
+        </div>
+
+        <div>
+          <label>Sheet Quantity</label>
+          <input type="number" id="sheetQty" value="1000" />
+        </div>
+
+        <div>
+          <label>Ply</label>
+          <select id="ply">
+            <option value="3">3 Ply</option>
+            <option value="5">5 Ply</option>
+          </select>
+        </div>
+
+        <div class="full">
+          <label>Paper Layers (Type / GSM / Rate Rs/kg)</label>
+          <div class="layers card" id="layersContainer" style="padding:12px;background:transparent;border:0"></div>
+        </div>
+
+        <h2 class="full">Printing & Lamination</h2>
+
+        <div>
+          <label>Print Rate (per 1000)</label>
+          <input type="number" id="printRate" value="700" />
+        </div>
+
+        <div>
+          <label>Min Print Qty (sheets)</label>
+          <input type="number" id="minPrintQty" value="3000" />
+        </div>
+
+        <div>
+          <label>Lamination Roll Length (inches)</label>
+          <input type="number" id="lamLength" />
+        </div>
+
+        <div>
+          <label>Lamination Roll Width (inches)</label>
+          <input type="number" id="lamWidth" />
+        </div>
+
+        <div class="full">
+          <label>Lamination Rate (per 100 sq in)</label>
+          <input type="number" id="lamRate" />
+        </div>
+
+        <h2 class="full">Other Costs & Settings</h2>
+
+        <div>
+          <label>Punching Cost (per 1000)</label>
+          <input type="number" id="punchCost" value="350" />
+        </div>
+
+        <div>
+          <label>Die Cost (Rs)</label>
+          <input type="number" id="dieCost" value="1200" />
+        </div>
+
+        <div>
+          <label>Wastage %</label>
+          <input type="number" id="wastage" value="5" />
+        </div>
+
+        <div>
+          <label>GST % (Paper)</label>
+          <input type="number" id="gstPaper" value="5" />
+        </div>
+
+        <div>
+          <label>Overheads (Rs)</label>
+          <input type="number" id="overheads" value="1000" />
+        </div>
+
+        <div>
+          <label>Transportation (Rs)</label>
+          <input type="number" id="transport" value="800" />
+        </div>
+
+        <div class="full">
+          <label>Margin %</label>
+          <input type="number" id="margin" value="15" />
+        </div>
+
+      </div> <!-- end form-grid -->
+
+      <div class="actions">
+        <button type="button" id="btnCalc">Calculate</button>
+        <button type="button" id="btnReset" class="secondary">Reset</button>
+        <button type="button" id="btnPrint" class="secondary">Export / Print</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Right: results -->
+  <div class="card right-sticky">
+    <h2>Summary & Breakdown</h2>
+    <div id="resultSummary" class="summary">No calculation yet. Click Calculate.</div>
+    <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px">
+      <button id="btnCalc2">Recalculate</button>
+      <button id="btnPrint2" class="secondary">Print</button>
+    </div>
+  </div>
+</main>
+
+<footer style="max-width:1200px;margin:12px auto;color:var(--muted);font-size:13px;padding:0 18px">
+  Generated by VANI GRAPHICS Packaging Calculator
+</footer>
+
+<script>
+/* ----------------- Setup / Defaults ----------------- */
+document.getElementById('today').innerText = new Date().toLocaleDateString();
+
+const PAPER_TYPES = ["ITC","Duplex","Craft","White Back","Greyback","Artcard"];
+
+/* create dynamic layer rows depending on ply */
+function makeLayerRow(idPrefix, label) {
+  // container for one row: type select, gsm, rate
+  const row = document.createElement('div');
+  row.className = 'layer-row';
+  row.dataset.label = label;
+
+  const sel = document.createElement('select');
+  sel.className = 'paperType';
+  PAPER_TYPES.forEach(t => {
+    const o = document.createElement('option'); o.value = t; o.textContent = t;
+    sel.appendChild(o);
+  });
+
+  const gsm = document.createElement('input');
+  gsm.type = 'number';
+  gsm.className = 'gsm';
+  gsm.placeholder = 'GSM';
+
+  const rate = document.createElement('input');
+  rate.type = 'number';
+  rate.className = 'rate';
+  rate.placeholder = 'Rate Rs/kg';
+
+  // Add labels for accessibility on narrow screens:
+  // For wide screens, using visual order is fine.
+  row.appendChild(sel);
+  row.appendChild(gsm);
+  row.appendChild(rate);
+  return row;
+}
+
+function renderLayers() {
+  const ply = document.getElementById('ply').value;
+  const container = document.getElementById('layersContainer');
+  container.innerHTML = '';
+  const rows = (ply === '3')
+    ? ['Master Liner','Flute','Base Liner']
+    : ['Master Liner','Upper Flute','Middle Liner','Lower Flute','Base Liner'];
+
+  rows.forEach((label, idx) => {
+    const r = makeLayerRow('layer' + idx, label);
+    // add placeholder values for clarity
+    r.querySelector('.gsm').value = '';
+    r.querySelector('.rate').value = '';
+    // attach a small label visually (we keep the earlier label text as instruction)
+    const labelWrap = document.createElement('div');
+    labelWrap.style.gridColumn = '1/-1';
+    labelWrap.style.fontWeight = '600';
+    labelWrap.style.margin = '6px 0 4px';
+    labelWrap.textContent = label;
+    container.appendChild(labelWrap);
+    container.appendChild(r);
+  });
+}
+
+/* unit conversion helper: returns meters */
+function toMeters(value, unit) {
+  if (!value || isNaN(value)) return 0;
+  if (unit === 'in') return Number(value) * 0.0254;
+  if (unit === 'cm') return Number(value) / 100;
+  if (unit === 'mm') return Number(value) / 1000;
+  return Number(value);
+}
+
+/* main calculation */
+function calculateAll() {
+  // read core inputs
+  const unit = document.getElementById('unit').value;
+  const L_input = Number(document.getElementById('jobLength').value) || 0;
+  const W_input = Number(document.getElementById('jobWidth').value) || 0;
+  const L = toMeters(L_input, unit);
+  const W = toMeters(W_input, unit);
+  const qty = Math.max(0, parseInt(document.getElementById('sheetQty').value) || 0);
+  const ply = document.getElementById('ply').value;
+  const fluteFactor = Number(document.getElementById('fluteFactor').value) || 1.4;
+
+  // process layer inputs
+  const layerRows = Array.from(document.querySelectorAll('#layersContainer .layer-row'));
+  const layers = layerRows.map(r => {
+    const label = r.previousElementSibling && r.previousElementSibling.textContent ? r.previousElementSibling.textContent : 'Layer';
+    const type = r.querySelector('.paperType')?.value || '';
+    const gsm = Number(r.querySelector('.gsm')?.value) || 0;
+    const rate = Number(r.querySelector('.rate')?.value) || 0;
+    return { label, type, gsm, rate };
+  });
+
+  // other costs
+  const printRate = Number(document.getElementById('printRate').value) || 0;
+  const minPrintQty = Number(document.getElementById('minPrintQty').value) || 3000;
+  const lamLength = Number(document.getElementById('lamLength').value) || 0; // inches
+  const lamWidth = Number(document.getElementById('lamWidth').value) || 0; // inches
+  const lamRate = Number(document.getElementById('lamRate').value) || 0; // per 100 sq in
+  const punchCostPer1000 = Number(document.getElementById('punchCost').value) || 0;
+  const dieCost = Number(document.getElementById('dieCost').value) || 0;
+  const wastagePerc = Number(document.getElementById('wastage').value) || 0;
+  const gstPaper = Number(document.getElementById('gstPaper').value) || 0;
+  const overheads = Number(document.getElementById('overheads').value) || 0;
+  const transport = Number(document.getElementById('transport').value) || 0;
+  const marginPerc = Number(document.getElementById('margin').value) || 0;
+
+  // per-layer calculations
+  let totalPaperWeightKg = 0;
+  let totalPaperCostRs = 0;
+  const layerDetails = [];
+
+  layers.forEach((layer, idx) => {
+    // determine whether this layer is a flute layer:
+    const key = layer.label.toLowerCase();
+    const isFlute = key.includes('flute');
+
+    let area_m2;
+    if (isFlute) {
+      // area = (L * qty * fluteFactor) * W
+      const totalLength_m = L * qty * fluteFactor;
+      area_m2 = totalLength_m * W;
+    } else {
+      // area = (L * W * qty)
+      area_m2 = L * W * qty;
+    }
+
+    // weight (kg) = (GSM * area_m2) / 1000
+    let weightKg = (layer.gsm * area_m2) / 1000;
+    // apply wastage to weight:
+    const weightWithWastageKg = weightKg * (1 + wastagePerc / 100);
+
+    // cost = weightWithWastage * rate
+    const costRs = weightWithWastageKg * layer.rate;
+
+    layerDetails.push({
+      label: layer.label,
+      type: layer.type,
+      gsm: layer.gsm,
+      area_m2: area_m2,
+      weightKg: weightKg,
+      weightWithWastageKg,
+      costRs
+    });
+
+    totalPaperWeightKg += weightWithWastageKg;
+    totalPaperCostRs += costRs;
+  });
+
+  // Printing cost (respect minimum quantity)
+  const effectivePrintQty = Math.max(minPrintQty, qty);
+  const printUnits = Math.ceil(effectivePrintQty / 1000);
+  const printingCostRs = printUnits * printRate;
+
+  // Lamination calculation (in square inches)
+  // Total lamination roll length (in) = lamLength * qty
+  const totalLamLength_in = lamLength * qty;
+  const totalLamArea_sqIn = totalLamLength_in * lamWidth; // square inches
+  const laminationCostRs = (totalLamArea_sqIn / 100) * lamRate;
+
+  // Punching cost
+  const punchUnits = Math.ceil(qty / 1000);
+  const punchingCostRs = punchUnits * punchCostPer1000;
+
+  // GST on paper (applied to paper cost only)
+  const gstOnPaperRs = (totalPaperCostRs * gstPaper) / 100;
+
+  // subtotal and grand total
+  const processCosts = printingCostRs + laminationCostRs + punchingCostRs + dieCost;
+  const subtotalRs = totalPaperCostRs + gstOnPaperRs + processCosts + overheads + transport;
+  const marginRs = subtotalRs * (marginPerc / 100);
+  const grandTotalRs = subtotalRs + marginRs;
+
+  // Build result HTML
+  let out = '';
+  out += `<strong>Job Size (internal meters):</strong> ${L.toFixed(4)} m × ${W.toFixed(4)} m\n`;
+  out += `<strong>Sheet Quantity:</strong> ${qty.toLocaleString()}\n\n`;
+
+  out += '-- Layer breakdown --\n';
+  out += 'Layer | Type | GSM | Area (m²) | Weight (kg) | +Wastage (kg) | Cost (Rs)\n';
+  out += '-----|------|-----:|----------:|------------:|---------------:|-----------:\n';
+  layerDetails.forEach(ld => {
+    out += `${ld.label} | ${ld.type} | ${ld.gsm} | ${ld.area_m2.toFixed(3)} | ${ld.weightKg.toFixed(3)} | ${ld.weightWithWastageKg.toFixed(3)} | ${ld.costRs.toFixed(2)}\n`;
+  });
+
+  out += `\nTotal Paper Weight (kg, incl. wastage): ${totalPaperWeightKg.toFixed(3)} kg\n`;
+  out += `Total Paper Cost (Rs): ${totalPaperCostRs.toFixed(2)}\n\n`;
+
+  out += '-- Process & Other Costs --\n';
+  out += `Printing Cost (effective qty ${effectivePrintQty.toLocaleString()}): Rs ${printingCostRs.toFixed(2)}\n`;
+  out += `Lamination Area (sq in): ${totalLamArea_sqIn.toFixed(2)} → Lamination Cost: Rs ${laminationCostRs.toFixed(2)}\n`;
+  out += `Punching Cost: Rs ${punchingCostRs.toFixed(2)}\n`;
+  out += `Die Cost: Rs ${dieCost.toFixed(2)}\n`;
+  out += `Overheads: Rs ${overheads.toFixed(2)} | Transport: Rs ${transport.toFixed(2)}\n`;
+  out += `GST on Paper (${gstPaper}%): Rs ${gstOnPaperRs.toFixed(2)}\n\n`;
+
+  out += `Subtotal (Paper + GST + Processes + Overheads + Transport): Rs ${subtotalRs.toFixed(2)}\n`;
+  out += `Margin (${marginPerc}%): Rs ${marginRs.toFixed(2)}\n`;
+  out += `\nGRAND TOTAL: Rs ${grandTotalRs.toFixed(2)}\n`;
+
+  // Also render a neat table for quick viewing
+  const tableHtml = []
+  tableHtml.push('<table><thead><tr><th>Layer</th><th>Type</th><th>GSM</th><th>Weight (kg)</th><th>Cost (Rs)</th></tr></thead><tbody>');
+  layerDetails.forEach(ld => {
+    tableHtml.push(`<tr><td>${ld.label}</td><td>${ld.type}</td><td style="text-align:right">${ld.gsm}</td><td style="text-align:right">${ld.weightWithWastageKg.toFixed(3)}</td><td style="text-align:right">${ld.costRs.toFixed(2)}</td></tr>`);
+  });
+  tableHtml.push(`<tr><th colspan="3" style="text-align:right">Totals</th><th style="text-align:right">${totalPaperWeightKg.toFixed(3)}</th><th style="text-align:right">${totalPaperCostRs.toFixed(2)}</th></tr>`);
+  tableHtml.push('</tbody></table>');
+
+  // final block with summary and totals
+  const resultBlock = `
+    <div style="font-family:ui-monospace,monospace;font-size:13px;line-height:1.35;">
+      ${tableHtml.join('')}
+      <div style="margin-top:10px;">
+        <strong>Printing:</strong> Rs ${printingCostRs.toFixed(2)} |
+        <strong>Lamination:</strong> Rs ${laminationCostRs.toFixed(2)} |
+        <strong>Punching:</strong> Rs ${punchingCostRs.toFixed(2)} |
+        <strong>Die:</strong> Rs ${dieCost.toFixed(2)}
+      </div>
+      <div style="margin-top:8px;">
+        <strong>GST on Paper (${gstPaper}%):</strong> Rs ${gstOnPaperRs.toFixed(2)}
+      </div>
+      <div style="margin-top:8px;">
+        <strong>Subtotal:</strong> Rs ${subtotalRs.toFixed(2)} <br>
+        <strong>Margin (${marginPerc}%):</strong> Rs ${marginRs.toFixed(2)} <br>
+        <strong style="font-size:1.08em">GRAND TOTAL: Rs ${grandTotalRs.toFixed(2)}</strong>
+      </div>
+      <hr style="margin:10px 0">
+      <pre style="white-space:pre-wrap;margin:0;font-family:inherit">${out}</pre>
+    </div>
+  `;
+
+  document.getElementById('resultSummary').innerHTML = resultBlock;
+  // scroll to top of results
+  document.getElementById('resultSummary').scrollTop = 0;
+}
+
+/* reset: clears all inputs to defaults and re-renders layer inputs */
+function resetAll() {
+  // reset form fields programmatically
+  document.getElementById('calcForm').reset();
+  // restore sensible defaults that reset() may not keep
+  document.getElementById('fluteFactor').value = '1.4';
+  document.getElementById('jobLength').value = '18';
+  document.getElementById('jobWidth').value = '23';
+  document.getElementById('sheetQty').value = '1000';
+  document.getElementById('printRate').value = '700';
+  document.getElementById('minPrintQty').value = '3000';
+  document.getElementById('punchCost').value = '350';
+  document.getElementById('dieCost').value = '1200';
+  document.getElementById('wastage').value = '5';
+  document.getElementById('gstPaper').value = '5';
+  document.getElementById('overheads').value = '1000';
+  document.getElementById('transport').value = '800';
+  document.getElementById('margin').value = '15';
+  // re-render layers
+  renderLayers();
+  document.getElementById('resultSummary').innerHTML = 'No calculation yet. Click Calculate.';
+}
+
+/* wire up UI */
+document.getElementById('ply').addEventListener('change', renderLayers);
+document.getElementById('btnCalc').addEventListener('click', calculateAll);
+document.getElementById('btnCalc2').addEventListener('click', calculateAll);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+document.getElementById('btnPrint').addEventListener('click', () => window.print());
+document.getElementById('btnPrint2').addEventListener('click', () => window.print());
+
+/* initial render */
+renderLayers();
+</script>
+</body>
+</html>
